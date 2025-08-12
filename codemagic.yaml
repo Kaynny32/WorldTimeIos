@@ -14,7 +14,7 @@ workflows:
       - name: "Install dependencies"
         script: |
           flutter pub get
-          pod install --project-directory=ios
+          flutter precache --ios
 
       - name: "Build IPA"
         script: |
