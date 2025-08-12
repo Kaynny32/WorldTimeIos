@@ -2,40 +2,42 @@ workflows:
   ios-production:
     name: iOS Production Build
     environment:
-      # Настройки Xcode
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
-        BUNDLE_ID: "com.yourcompany.worldtime"  # Замените на ваш Bundle ID
-        APP_NAME: "World Time"  # Имя вашего приложения
-        
-      # Группы переменных (нужно создать в настройках Codemagic)
+        BUNDLE_ID: "com.yourcompany.worldtime"  # Замените на ваш реальный Bundle ID
+        APP_NAME: "World Time"
+
+      # Обязательно добавьте одну из этих групп:
       groups:
-        - appstore_credentials  # Для подписи iOS-приложения
-        - flutter_config  # Для настройки Flutter
+        - appstore_connect_api_key  # Рекомендуемый вариант
+        # ИЛИ
+        - appstore_credentials  # Альтернативный вариант
 
-    # Этапы сборки
     scripts:
-      # Установка зависимостей
-      - flutter pub get
-      
-      # Сборка IPA с подписью
-      - flutter build ipa --release \
-          --export-options-plist ios/ExportOptions.plist \
-          --dart-define=APP_NAME=$APP_NAME \
-          --dart-define=BUNDLE_ID=$BUNDLE_ID
-      
-      # Дополнительные действия (опционально)
-      - echo "Build completed! IPA path: build/ios/ipa/"
+      - name: "Install dependencies"
+        script: flutter pub get
 
-    # Артефакты сборки
+      - name: "Build IPA"
+        script: |
+          flutter build ipa --release \
+            --export-options-plist ios/ExportOptions.plist \
+            --dart-define=APP_NAME=$APP_NAME \
+            --dart-define=BUNDLE_ID=$BUNDLE_ID
+          echo "Build completed! IPA path: build/ios/ipa/"
+
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/archive/*.xcarchive  # Архив для отладки
 
-    # Публикация (опционально)
     publishing:
       app_store_connect:
-        # Автоматическая загрузка в TestFlight
+        # Вариант 1 (рекомендуется): API Key
+        api_key: $APP_STORE_CONNECT_API_KEY  # Автоматически подхватится из группы appstore_connect_api_key
+
+        # Вариант 2: Apple ID + App-specific password
+        # apple_id: $APPLE_ID
+        # password: $APP_SPECIFIC_PASSWORD
+
+        # Настройки публикации:
         submit_to_testflight: true
-        beta_groups:  # Группы тестировщиков
+        beta_groups:  # Опционально - группы тестировщиков
           - "Internal Testers"
