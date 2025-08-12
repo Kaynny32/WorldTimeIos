@@ -2,34 +2,53 @@ workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
-      flutter: "3.19.5" # Фиксированная версия
+      flutter: "3.16.9" # Версия с Dart 3.8.1+
       xcode: latest
-      cocoapods: "1.15.2" # Фиксированная версия
+      cocoapods: "1.15.2"
     scripts:
-      # 1. Полная очистка
-      - name: Очистка проекта
+      # 1. Проверка окружения
+      - name: Проверка версий
+        script: |
+          flutter --version
+          dart --version
+          pod --version
+          
+      # 2. Очистка и подготовка
+      - name: Подготовка проекта
         script: |
           flutter clean
           rm -rf ios/Pods ios/.symlinks ios/Flutter/Flutter.podspec
           
-      # 2. Принудительное создание iOS-файлов
-      - name: Пересоздание iOS-проекта
+      # 3. Создание iOS-файлов (с проверкой ошибок)
+      - name: Инициализация iOS
         script: |
           if [ -d "ios" ]; then
+            echo "Удаляем старую папку ios..."
             rm -rf ios
           fi
-          flutter create --platforms ios --org com.yourdomain .
+          echo "Создаем iOS-проект..."
+          flutter create --platforms ios --org com.yourdomain . || {
+            echo "Ошибка при создании iOS-проекта";
+            flutter doctor -v;
+            exit 1;
+          }
           
-      # 3. Обновление зависимостей
-      - name: Обновление зависимостей
+      # 4. Установка зависимостей
+      - name: Установка зависимостей
         script: |
+          echo "Обновляем Dart-пакеты..."
           flutter pub upgrade --major-versions
+          
+          echo "Обновляем iOS-зависимости..."
           cd ios
           pod repo update
-          pod deintegrate || true # Игнорировать ошибки, если Pods нет
-          pod install --repo-update
+          pod install --repo-update || {
+            echo "Ошибка pod install";
+            pod env;
+            exit 1;
+          }
           
-      # 4. Сборка с подробным логом
+      # 5. Сборка
       - name: Сборка IPA
         script: |
           flutter build ipa --release --verbose
