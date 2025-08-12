@@ -2,35 +2,34 @@ workflows:
   ios-production:
     name: iOS Production Build
     environment:
+      groups:
+        - appstore_connect_api_key  # Обязательная группа для авторизации
+
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
-        BUNDLE_ID: "com.yourcompany.worldtime"  # Замените на ваш
-        APP_NAME: "World Time"
-
-      # Обязательная группа для API Key аутентификации
-      groups:
-        - appstore_connect_api_key  # Должна содержать 3 переменные:
+        BUNDLE_ID: "com.yourdomain.appname"  # Замените на ваш
+        APP_NAME: "Your App Name"
 
     scripts:
-      - name: "Установка зависимостей"
+      - name: "Install dependencies"
         script: |
           flutter pub get
-          
-      - name: "Сборка IPA"
-  script: |
-    flutter build ipa --release \
-      --export-options-plist ios/ExportOptions.plist \
-      --target=lib/main.dart  # Явно укажите точку входа
+          pod install --project-directory=ios
+
+      - name: "Build IPA"
+        script: |
+          flutter build ipa \
+            --release \
+            --export-options-plist ios/ExportOptions.plist \
+            --dart-define=APP_NAME=$APP_NAME \
+            --dart-define=BUNDLE_ID=$BUNDLE_ID
 
     artifacts:
       - build/ios/ipa/*.ipa
 
     publishing:
       app_store_connect:
-        # Настройки API Key (берутся из группы)
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        
-        # Опции публикации
         submit_to_testflight: true
