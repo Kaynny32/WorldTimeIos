@@ -2,56 +2,57 @@ workflows:
   ios-workflow:
     name: iOS Build Workflow
     environment:
-      flutter: "3.16.9" # Версия с Dart 3.8.1+
+      flutter: "3.32.8" # Соответствует Dart 3.8.1
       xcode: latest
       cocoapods: "1.15.2"
     scripts:
-      # 1. Проверка окружения
-      - name: Проверка версий
+      - name: Проверка окружения
         script: |
           flutter --version
           dart --version
           pod --version
-          
-      # 2. Очистка и подготовка
-      - name: Подготовка проекта
+
+      - name: Очистка проекта
         script: |
           flutter clean
           rm -rf ios/Pods ios/.symlinks ios/Flutter/Flutter.podspec
-          
-      # 3. Создание iOS-файлов (с проверкой ошибок)
-      - name: Инициализация iOS
+
+      - name: Создание iOS-структуры
         script: |
           if [ -d "ios" ]; then
-            echo "Удаляем старую папку ios..."
+            echo "Удаление старой iOS-структуры..."
             rm -rf ios
           fi
-          echo "Создаем iOS-проект..."
+          echo "Создание новой iOS-структуры..."
           flutter create --platforms ios --org com.yourdomain . || {
-            echo "Ошибка при создании iOS-проекта";
-            flutter doctor -v;
-            exit 1;
+            echo "=== ОШИБКА СОЗДАНИЯ iOS ==="
+            ls -la ios/
+            flutter doctor -v
+            exit 1
           }
-          
-      # 4. Установка зависимостей
-      - name: Установка зависимостей
+
+      - name: Обновление зависимостей
         script: |
-          echo "Обновляем Dart-пакеты..."
+          echo "Обновление Dart-пакетов..."
           flutter pub upgrade --major-versions
           
-          echo "Обновляем iOS-зависимости..."
+          echo "Обновление iOS-зависимостей..."
           cd ios
           pod repo update
-          pod install --repo-update || {
-            echo "Ошибка pod install";
-            pod env;
-            exit 1;
+          pod install --repo-update --verbose || {
+            echo "=== ОШИБКА POD INSTALL ==="
+            pod env
+            ls -la
+            exit 1
           }
-          
-      # 5. Сборка
+
       - name: Сборка IPA
         script: |
           flutter build ipa --release --verbose
           
     artifacts:
       - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - your.email@example.com
