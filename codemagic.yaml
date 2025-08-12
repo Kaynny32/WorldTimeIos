@@ -1,19 +1,41 @@
-# Название workflow
 workflows:
-  ios-ipa:
-    name: Build IPA
+  ios-production:
+    name: iOS Production Build
     environment:
-      # Указываем Xcode workspace (обычно "Runner.xcworkspace")
+      # Настройки Xcode
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
-    
+        BUNDLE_ID: "com.yourcompany.worldtime"  # Замените на ваш Bundle ID
+        APP_NAME: "World Time"  # Имя вашего приложения
+        
+      # Группы переменных (нужно создать в настройках Codemagic)
+      groups:
+        - appstore_credentials  # Для подписи iOS-приложения
+        - flutter_config  # Для настройки Flutter
+
+    # Этапы сборки
     scripts:
-      # Устанавливаем Flutter и зависимости
+      # Установка зависимостей
       - flutter pub get
       
-      # Собираем IPA с нашим ExportOptions.plist
-      - flutter build ipa --release --export-options-plist ios/ExportOptions.plist
-    
-    # Сохраняем IPA после сборки
+      # Сборка IPA с подписью
+      - flutter build ipa --release \
+          --export-options-plist ios/ExportOptions.plist \
+          --dart-define=APP_NAME=$APP_NAME \
+          --dart-define=BUNDLE_ID=$BUNDLE_ID
+      
+      # Дополнительные действия (опционально)
+      - echo "Build completed! IPA path: build/ios/ipa/"
+
+    # Артефакты сборки
     artifacts:
-      - build/ios/ipa/*.ipa  # Вот здесь будет готовый файл!
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive  # Архив для отладки
+
+    # Публикация (опционально)
+    publishing:
+      app_store_connect:
+        # Автоматическая загрузка в TestFlight
+        submit_to_testflight: true
+        beta_groups:  # Группы тестировщиков
+          - "Internal Testers"
