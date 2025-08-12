@@ -6,29 +6,37 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      # 1. Инициализация Keychain (для подписи кода)
       - name: Set up keychain
         script: |
           keychain initialize
 
-      - name: Upgrade Flutter and dependencies
+      # 2. Обновление Flutter и пакетов
+      - name: Upgrade Flutter and fix dependencies
         script: |
           flutter upgrade
           flutter pub upgrade --major-versions
-          flutter pub outdated
+          flutter clean
 
+      # 3. Генерация iOS-файлов (если их нет)
       - name: Generate iOS files (if missing)
         script: |
-          flutter create --platforms ios .
+          if [ ! -d "ios" ]; then
+            flutter create --platforms ios .
+          fi
 
-      - name: Fetch dependencies
+      # 4. Установка зависимостей (с принудительным обновлением CocoaPods)
+      - name: Install dependencies
         script: |
           flutter pub get
-          cd ios && pod install --repo-update && cd ..
+          cd ios && pod repo update && pod install --repo-update && cd ..
 
-      - name: Build IPA
+      # 5. Сборка IPA (без подписи)
+      - name: Build unsigned IPA
         script: |
           flutter build ipa --release --no-codesign
 
+      # 6. Подпись и финальная сборка IPA
       - name: Code signing
         script: |
           cd ios
