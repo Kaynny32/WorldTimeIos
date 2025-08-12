@@ -4,40 +4,34 @@ workflows:
     environment:
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
-        BUNDLE_ID: "com.yourcompany.worldtime"  # Замените на ваш реальный Bundle ID
+        BUNDLE_ID: "com.yourcompany.worldtime"  # Замените на ваш
         APP_NAME: "World Time"
 
-      # Обязательно добавьте одну из этих групп:
+      # Обязательная группа для API Key аутентификации
       groups:
-        - appstore_connect_api_key  # Рекомендуемый вариант
-        # ИЛИ
-        - appstore_credentials  # Альтернативный вариант
+        - appstore_connect_api_key  # Должна содержать 3 переменные:
 
     scripts:
-      - name: "Install dependencies"
-        script: flutter pub get
-
-      - name: "Build IPA"
+      - name: "Установка зависимостей"
+        script: |
+          flutter pub get
+          
+      - name: "Сборка IPA"
         script: |
           flutter build ipa --release \
             --export-options-plist ios/ExportOptions.plist \
             --dart-define=APP_NAME=$APP_NAME \
             --dart-define=BUNDLE_ID=$BUNDLE_ID
-          echo "Build completed! IPA path: build/ios/ipa/"
 
     artifacts:
       - build/ios/ipa/*.ipa
 
     publishing:
       app_store_connect:
-        # Вариант 1 (рекомендуется): API Key
-        api_key: $APP_STORE_CONNECT_API_KEY  # Автоматически подхватится из группы appstore_connect_api_key
-
-        # Вариант 2: Apple ID + App-specific password
-        # apple_id: $APPLE_ID
-        # password: $APP_SPECIFIC_PASSWORD
-
-        # Настройки публикации:
+        # Настройки API Key (берутся из группы)
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        
+        # Опции публикации
         submit_to_testflight: true
-        beta_groups:  # Опционально - группы тестировщиков
-          - "Internal Testers"
