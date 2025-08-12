@@ -17,11 +17,10 @@ workflows:
           flutter pub get
           
       - name: "Сборка IPA"
-        script: |
-          flutter build ipa --release \
-            --export-options-plist ios/ExportOptions.plist \
-            --dart-define=APP_NAME=$APP_NAME \
-            --dart-define=BUNDLE_ID=$BUNDLE_ID
+  script: |
+    flutter build ipa --release \
+      --export-options-plist ios/ExportOptions.plist \
+      --target=lib/main.dart  # Явно укажите точку входа
 
     artifacts:
       - build/ios/ipa/*.ipa
