@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Тип подписи: development (для тестов), app-store (для публикации) -->
+    <key>method</key>
+    <string>development</string>
+
+    <!-- Team ID из App Store Connect (если есть) -->
+
+    <string>YOUR_TEAM_ID</string> <!-- Замените на свой -->
+
+    <!-- Если нет Developer Account, удалите teamID -->
+</dict>
+</plist>

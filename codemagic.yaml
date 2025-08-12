@@ -1,0 +1,19 @@
+# Название workflow
+workflows:
+  ios-ipa:
+    name: Build IPA
+    environment:
+      # Указываем Xcode workspace (обычно "Runner.xcworkspace")
+      vars:
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+    
+    scripts:
+      # Устанавливаем Flutter и зависимости
+      - flutter pub get
+      
+      # Собираем IPA с нашим ExportOptions.plist
+      - flutter build ipa --release --export-options-plist ios/ExportOptions.plist
+    
+    # Сохраняем IPA после сборки
+    artifacts:
+      - build/ios/ipa/*.ipa  # Вот здесь будет готовый файл!
